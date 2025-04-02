@@ -2,9 +2,9 @@ require('dotenv').config();
 const puppeteer = require('puppeteer-core');
 const chromium = require('chrome-aws-lambda');
 
-module.exports = async (req, res) => {
-  // إرسال استجابة فورية أولاً
-  res.status(200).send(`HELLO`);
+app.get("/", (req, res) => {
+  res.send('<center><h1>DONE</h1></center>')
+});
 
   try {
     // إعداد المتصفح لبيئة Vercel
