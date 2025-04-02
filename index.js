@@ -1,64 +1,63 @@
+// index.js
 require('dotenv').config();
-const puppeteer = require('puppeteer-core');
+const express = require('express');
+const puppeteer = require('puppeteer');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-module.exports = async (req, res) => {
-  try {
-    // إرسال الاستجابة الفورية أولاً
-    res.setHeader('Content-Type', 'text/html');
-    res.status(200).send('<h1>Done</h1>');
-
-    // المعالجة الخلفية مع تحسينات الأمان
-    if (req.method === 'GET') {
-      setTimeout(async () => {
-        let browser;
-        try {
-          browser = await puppeteer.launch({
-            executablePath: process.env.CHROME_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
-            args: [
-              '--no-sandbox',
-              '--disable-setuid-sandbox',
-              '--disable-dev-shm-usage',
-              '--single-process'
-            ],
-            headless: true,
-            timeout: 30000
-          });
-
-          const page = await browser.newPage();
-          await page.setDefaultNavigationTimeout(60000);
-
-          // تسجيل الدخول إلى Replit
-          await page.goto('https://replit.com/login', { 
-            waitUntil: 'domcontentloaded',
-            timeout: 60000
-          });
-
-          await page.type('input[name="email"]', process.env.REPLIT_EMAIL);
-          await page.type('input[name="password"]', process.env.REPLIT_PASSWORD);
-          await Promise.all([
-            page.waitForNavigation({ timeout: 60000 }),
-            page.click('button[type="submit"]')
-          ]);
-
-          // الانتقال إلى المشروع
-          await page.goto(`https://replit.com/${process.env.REPLIT_PROJECT}`, {
-            waitUntil: 'domcontentloaded',
-            timeout: 60000
-          });
-
-          // إجراء نشاط بسيط
-          await page.evaluate(() => {
-            console.log('Keepalive activity executed at:', new Date());
-          });
-
-        } catch (err) {
-          console.error('Background error:', err.message);
-        } finally {
-          if (browser) await browser.close();
-        }
-      }, 500);
-    }
-  } catch (err) {
-    console.error('Main function error:', err.message);
-  }
+// بيانات تسجيل الدخول (يجب استخدام environment variables في الإنتاج)
+const CREDENTIALS = {
+  email: process.env.REPLIT_EMAIL || '4183ca273c@emaily.pro',
+  password: process.env.REPLIT_PASSWORD || '4183ca273c@emaily.pro',
+  projectName: process.env.REPLIT_PROJECT || 'aa'
 };
+
+// محاكاة تسجيل الدخول وإبقاء المشروع نشطًا
+async function keepAlive() {
+  const browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+
+  try {
+    console.log('جاري تسجيل الدخول إلى Replit...');
+    await page.goto('https://replit.com/login');
+    
+    // إدخال بيانات الاعتماد
+    await page.type('input[name="username"]', CREDENTIALS.email);
+    await page.type('input[name="password"]', CREDENTIALS.password);
+    await page.click('button[type="submit"]');
+    
+    console.log('تم تسجيل الدخول بنجاح ✅');
+    
+    // الانتقال إلى المشروع
+    await page.goto(`https://replit.com/@${CREDENTIALS.email}/${CREDENTIALS.projectName}`);
+    console.log('تم الوصول إلى المشروع 🚀');
+
+    // إبقاء النافذة مفتوحة
+    setInterval(async () => {
+      await page.reload();
+      console.log('جاري تجديد النشاط... 🔄');
+    }, 300000); // كل 5 دقائق
+
+  } catch (error) {
+    console.error('حدث خطأ:', error);
+    await browser.close();
+  }
+}
+
+// واجهة الويب
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <body style="background: #1a1a1a; color: white; text-align: center;">
+        <h1>Hello World 🌍</h1>
+        <p>المشروع يعمل بنجاح على ${CREDENTIALS.projectName}</p>
+      </body>
+    </html>
+  `);
+});
+
+// بدء التشغيل
+app.listen(PORT, () => {
+  console.log(`الخادم يعمل على http://localhost:${PORT}`);
+  keepAlive();
+});
