@@ -1,47 +1,38 @@
 require('dotenv').config();
-const puppeteer = require('puppeteer-core');
-const chromium = require('chrome-aws-lambda');
+const playwright = require('playwright-core');
 
-app.get("/", (req, res) => {
-  res.send('<center><h1>DONE</h1></center>')
-});
-
+module.exports = async (req, res) => {
   try {
-    // إعداد المتصفح لبيئة Vercel
-    const browser = await puppeteer.launch({
-      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: await chromium.executablePath || '/usr/bin/chromium-browser',
-      headless: chromium.headless,
-      defaultViewport: chromium.defaultViewport,
+    // إرسال استجابة فورية أولاً
+    res.status(200).json({ 
+      status: 'processing',
+      message: 'جاري تنشيط مشروع Replit',
+      timestamp: new Date().toISOString()
     });
 
-    const page = await browser.newPage();
-    
-    // تسجيل الدخول إلى Replit
-    await page.goto('https://replit.com/login', { 
-      waitUntil: 'networkidle2',
-      timeout: 20000 
+    // تشغيل المتصفح في الخلفية
+    const browser = await playwright.chromium.launch({
+      channel: 'chrome',
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
-    await page.type('#email', process.env.REPLIT_EMAIL);
-    await page.type('#password', process.env.REPLIT_PASSWORD);
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // تنفيذ العمليات مع Replit
+    await page.goto('https://replit.com/login');
+    await page.fill('input[name="email"]', process.env.REPLIT_EMAIL);
+    await page.fill('input[name="password"]', process.env.REPLIT_PASSWORD);
     await page.click('button[type="submit"]');
-    await page.waitForNavigation({ timeout: 20000 });
-
-    // الانتقال إلى المشروع
-    await page.goto(`https://replit.com/${process.env.REPLIT_PROJECT}`, {
-      waitUntil: 'networkidle2',
-      timeout: 20000
-    });
-
-    // تنفيذ نشاط للحفاظ على الاتصال
-    await page.evaluate(() => {
-      console.log('نشاط حافظة الاتصال - ' + new Date().toLocaleString());
-    });
-
+    await page.waitForURL('**/@**');
+    
+    await page.goto(`https://replit.com/${process.env.REPLIT_PROJECT}`);
+    await page.click('[data-cy="run-button"]');
+    
     await browser.close();
 
   } catch (error) {
-    console.error('حدث خطأ:', error.message);
+    console.error('حدث خطأ:', error);
   }
 };
