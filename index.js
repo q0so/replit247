@@ -4,16 +4,7 @@ const chromium = require('chrome-aws-lambda');
 
 module.exports = async (req, res) => {
   // إرسال استجابة فورية أولاً
-  res.status(200).send(`
-    <!DOCTYPE html>
-    <html>
-      <head><title>Replit Keepalive</title></head>
-      <body>
-        <h1>تم التنشيط بنجاح ✅</h1>
-        <p>جاري الحفاظ على نشاط المشروع...</p>
-      </body>
-    </html>
-  `);
+  res.status(200).send(`HELLO`);
 
   try {
     // إعداد المتصفح لبيئة Vercel
