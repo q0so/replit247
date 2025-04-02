@@ -1,26 +1,18 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "index.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "includeFiles": [
-          "node_modules/chrome-aws-lambda/**",
-          "node_modules/puppeteer-core/**"
-        ]
-      }
+  "builds": [{
+    "src": "index.js",
+    "use": "@vercel/node",
+    "config": {
+      "maxLambdaSize": "20mb",
+      "includeFiles": [
+        "node_modules/puppeteer-core/**"
+      ]
     }
-  ],
-  "routes": [
-    {
-      "src": "/keepalive",
-      "dest": "/index.js"
-    },
-    {
-      "src": "/",
-      "dest": "/index.js"
-    }
-  ]
+  }],
+  "routes": [{
+    "src": "/(.*)",
+    "dest": "/index.js",
+    "methods": ["GET"]
+  }]
 }
